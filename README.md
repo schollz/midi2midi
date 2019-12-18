@@ -1,9 +1,8 @@
 # midi2midi
 
-![Connected](https://user-images.githubusercontent.com/6550035/71097026-3651d400-2164-11ea-867f-83738b77ed2f.PNG)
+Go to this webpage to connect two MIDI devices: https://schollz.github.com/midi2midi
 
-This is an example of how easy it is to make Chrome a MIDI controller. Simply connect up two 
-USB keyboards to your computer, open the browser, and then you have a controller!
+Amazingly, you can have [websites that fully interop with MIDI specs](https://www.w3.org/TR/webmidi/) (though [not compatiable on all browsers still](https://developer.mozilla.org/en-US/docs/Web/API/MIDIAccess)). I had attempted this kind of thing before using [Go + PortMidi](https://github.com/schollz/pianoai) but it was always tricky getting it to work on different operating systems. Since Chrome is easy to install everywhere, you can actually have chrome everywhere supporting your MIDI devices, with just a little Javascript code.
 
 ## License
 
