@@ -1,13 +1,13 @@
 var midi1 = null;
 var midi2 = null;
 var outputMidi = null;
-var addOption = function(dropdownid, text) {
+var addOption = function (dropdownid, text) {
     var optn = document.createElement("OPTION");
     optn.text = text;
     optn.value = text;
     document.getElementById(dropdownid).options.add(optn);
 }
-var checkOption = function(e) {
+var checkOption = function (e) {
     console.log(e);
     if (e.target.id == "controller")
         midi1 = document.getElementById("controller").value;
@@ -20,9 +20,13 @@ var checkOption = function(e) {
     if (midi1 != null && midi2 != null) {
         console.log("setting up")
         var inputs = midiAccess.inputs.values();
+        console.log('listing inputs');
         for (var input = inputs.next(); input && !input.done; input = inputs.next()) {
-            if (input.value.name == midi1)
+            console.log(input.name, midi1.name);
+            if (input.value.name == midi1) {
                 input.value.onmidimessage = MIDIMessageEventHandler;
+                console.log(`connected ${midi1} as input`);
+            }
         }
         var outputs = midiAccess.outputs.values();
         for (var output = outputs.next(); output && !output.done; output = outputs.next()) {
@@ -34,8 +38,8 @@ var checkOption = function(e) {
     }
 }
 var midiAccess = null;
-window.addEventListener('load', function() {
-    if (navigator.requestMIDIAccess)
+window.addEventListener('load', function () {
+    if (navigator.requestMIDIAccess({ sysex: true }))
         navigator.requestMIDIAccess().then(onMIDIInit, onMIDIReject);
     else {
         document.getElementById("connected").innerText = "No MIDI support present in your browser."
@@ -72,26 +76,21 @@ function onMIDIReject(err) {
 }
 
 function MIDIMessageEventHandler(event) {
-    // Mask off the lower nibble (MIDI channel, which we don't care about)
-    switch (event.data[0] & 0xf0) {
-        case 0x90:
-            if (event.data[2] != 0) { // if velocity != 0, this is a note-on message
-                noteOn(event.data);
-                return;
-            }
-            // if velocity == 0, fall thru: it's a note-off.  MIDI's weird, y'all.
-        case 0x80:
-            noteOff(event.data);
-            return;
+    if (event.data[0] == 0xf0) {
+        // convert the sysex to string 
+        var sysex = "";
+        for (var i = 1; i < midiMessage.data.length - 1; i++) {
+            sysex += String.fromCharCode(midiMessage.data[i]);
+        }
+        console.log(sysex);
+        return;
     }
-}
-
-function noteOn(e) {
-    if (outputMidi != null)
-        outputMidi.send(e);
-}
-
-function noteOff(e) {
-    if (outputMidi != null)
-        outputMidi.send(e);
+    // print the event type
+    if (event.data.length == 3) {
+        outputMidi.send([event.data[0], event.data[1], event.data[2]]);
+    } else if (event.data.length == 2) {
+        outputMidi.send([event.data[0], event.data[1]]);
+    } else if (event.data.length == 1) {
+        outputMidi.send([event.data[0]]);
+    }
 }
